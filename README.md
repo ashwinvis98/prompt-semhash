@@ -4,8 +4,8 @@ A small, dependency-free **similarity digest for prompts** — a fuzzy hash that
 you tell when two adversarial prompts are the *same attack reworded*, instead of
 treating every rephrasing as brand new.
 
-> **Status:** early work in progress. The lexical baseline here is real and runnable;
-> the semantic variant is a stated research direction, not a finished claim.
+> **Status:** early work in progress. The lexical baseline is implemented and tested;
+> the semantic variant is a planned direction.
 
 ## Why
 
@@ -25,9 +25,8 @@ of four hundred reworded jailbreaks reads as four hundred unrelated items.
   a requirement for correlating across parties.
 - **Not yet:** true *semantic* paraphrase (same intent, entirely different words).
   Lexical shingling cannot see that. The intended direction is an embedding-derived,
-  quantized digest with the same compare interface. That is an **open problem**, and
-  this project does not pretend the baseline solves it. See
-  [Roadmap](#roadmap-honest-version).
+  quantized digest with the same compare interface. That remains an open problem;
+  see the [Roadmap](#roadmap).
 
 ## Install
 
@@ -77,7 +76,7 @@ prompt-semhash compare-digests psh1:64:... psh1:64:...
 
 Digest format: `psh1:<num_perm>:<hex>:<hex>:...`.
 
-## Roadmap (honest version)
+## Roadmap
 
 - [x] Lexical MinHash baseline + deterministic digest format + compare.
 - [ ] Embedding-derived semantic digest (quantized/LSH) behind the same interface.
