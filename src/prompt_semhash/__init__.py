@@ -18,12 +18,13 @@ from .digest import (
 )
 from .embedding import (
     SemanticHasher,
+    fit_reference_mean,
     parse_semantic_digest,
     semantic_digest,
     semantic_similarity,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.4.0"
 
 
 def compare(digest_a: str, digest_b: str) -> float:
@@ -34,7 +35,7 @@ def compare(digest_a: str, digest_b: str) -> float:
         raise ValueError(f"digests use different schemes: {scheme_a!r} vs {scheme_b!r}")
     if scheme_a == "psh1":
         return similarity(digest_a, digest_b)
-    if scheme_a == "pse1":
+    if scheme_a in ("pse1", "pse1c"):
         return semantic_similarity(digest_a, digest_b)
     raise ValueError(f"unknown digest scheme: {scheme_a!r}")
 
@@ -50,6 +51,7 @@ __all__ = [
     "semantic_digest",
     "semantic_similarity",
     "parse_semantic_digest",
+    "fit_reference_mean",
     "compare",
     "__version__",
 ]

@@ -61,6 +61,19 @@ def test_compare_rejects_mixed_schemes():
     raise AssertionError("expected ValueError for mixed schemes")
 
 
+def test_centering_uses_distinct_scheme_and_blocks_mixed_compare():
+    h_raw = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7)
+    h_ctr = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, mean=[0.5] * 8)
+    assert h_raw.digest("a").startswith("pse1:")
+    assert h_ctr.digest("a").startswith("pse1c:")
+    assert semantic_similarity(h_ctr.digest("a"), h_ctr.digest("a")) == 1.0
+    try:
+        compare(h_raw.digest("a"), h_ctr.digest("a"))
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError when mixing pse1 and pse1c")
+
+
 def _run_all() -> None:
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     for fn in fns:

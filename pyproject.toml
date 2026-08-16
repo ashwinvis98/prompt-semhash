@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prompt-semhash"
-version = "0.3.0"
+version = "0.4.0"
 description = "A lexical similarity digest (fuzzy hash) for adversarial prompts, for cross-paraphrase correlation."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,6 +23,7 @@ dependencies = []
 [project.optional-dependencies]
 semantic = ["sentence-transformers>=2.2"]
 fastembed = ["fastembed>=0.3"]
+onnx = ["onnxruntime>=1.16", "tokenizers>=0.15", "huggingface_hub>=0.20", "numpy>=1.21"]
 dev = ["pytest>=7", "ruff>=0.4", "mypy>=1.8"]
 
 [project.scripts]

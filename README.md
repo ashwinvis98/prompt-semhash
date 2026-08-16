@@ -111,9 +111,14 @@ semantic_similarity(
 )
 ```
 
+For the strongest results, use a **domain-tuned** model via `backends.onnx_hasher`
+(e.g. a fine-tuned jailbreak/prompt-injection embedding), and optionally **mean-center**
+with a shared reference mean (scheme `pse1c`) for cleaner thresholds — see
+[RESULTS.md](RESULTS.md).
+
 It uses SimHash (random-hyperplane LSH) over the embedding, so similar meanings
 produce similar bit-signatures (scheme `pse1`). The embedding function is injectable
-(`SemanticHasher(embed_fn=...)`). This is experimental: early results
+(`SemanticHasher(embed_fn=...)`). Evaluated results:
 (`eval/semantic_eval.py`) show it does lift the similarity of paraphrased prompts, but
 whether it *separates* attack families depends on the embedding model and on how
 distinct those families are — so it is not yet a drop-in win. Digests from different
@@ -151,9 +156,9 @@ embeddings.
 - [x] Lexical MinHash baseline + deterministic digest format + compare.
 - [x] Evaluation harness (intra/inter-family similarity, threshold F1) + labelled fixtures.
 - [x] Embedding-derived semantic digest (SimHash / LSH) behind the same interface (experimental).
-- [x] Corpus clustering tool (`eval/cluster_corpus.py`) + lexical redundancy measured on HackAPrompt.
-- [x] Family-recovery on distinct-intent labels (JailbreakBench) — see [RESULTS.md](RESULTS.md).
-- [ ] Domain-adapted embedding + calibration to strengthen the semantic digest.
+- [x] Corpus clustering tool (`eval/cluster_corpus.py`) + lexical redundancy on HackAPrompt.
+- [x] Same-attack matching on WildJailbreak: semantic digest ~2x lexical (68–88% recall@1). See [RESULTS.md](RESULTS.md).
+- [x] Domain-tuned backend (`backends.onnx_hasher`) + mean-centering calibration (`pse1c`).
 - [ ] A STIX observable property carrying the digest, for cross-instance correlation.
 
 ## Relationship to `adversarial-ai-cti`
