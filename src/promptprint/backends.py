@@ -10,7 +10,7 @@ Each imports its dependency lazily and raises a clear error if it is missing.
 from __future__ import annotations
 
 import os
-from typing import Sequence
+from collections.abc import Sequence
 
 from .embedding import SemanticHasher
 
@@ -23,11 +23,11 @@ def fastembed_hasher(
     seed: int = 1,
     mean: Sequence[float] | None = None,
 ) -> SemanticHasher:
-    """SemanticHasher backed by fastembed (ONNX). Install: ``prompt-semhash[fastembed]``."""
+    """SemanticHasher backed by fastembed (ONNX). Install: ``promptprint[fastembed]``."""
     try:
         from fastembed import TextEmbedding
     except ImportError as exc:  # pragma: no cover
-        raise ImportError("Install fastembed: pip install prompt-semhash[fastembed]") from exc
+        raise ImportError("Install fastembed: pip install promptprint[fastembed]") from exc
     model = TextEmbedding(model_name)
 
     def embed(text: str):

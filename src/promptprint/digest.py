@@ -1,19 +1,19 @@
 """A lexical similarity digest for adversarial prompts.
 
-``prompt-semhash`` computes a MinHash signature over word-shingles so that
+``promptprint`` computes a MinHash signature over word-shingles so that
 near-duplicate prompts produce *comparable* digests: two prompts that share phrasing
 land close together, and a platform can cluster them without re-reading the raw text.
 
-This is the **lexical baseline**. It catches rewording that preserves shared word
-sequences (the common case for copy-paste-and-tweak jailbreaks); it does **not**
-capture full semantic paraphrase where the wording changes but the meaning does not.
-That is the embedding-based direction described in the README, and it is an open
-problem rather than a solved one. This module is deliberately dependency-free so the
-baseline is trivial to run and audit.
+This is the **lexical baseline** (``ppl1`` = promptprint lexical v1). It catches
+rewording that preserves shared word sequences (the common case for
+copy-paste-and-tweak jailbreaks); it does **not** capture full semantic paraphrase
+where the wording changes but the meaning does not. That is the embedding-based
+direction (``pps1``, see ``embedding.py``). This module is deliberately
+dependency-free so the baseline is trivial to run and audit.
 
-Digest format (``psh1``):
+Digest format (``ppl1``):
 
-    psh1:<num_perm>:<hex>:<hex>:...:<hex>
+    ppl1:<num_perm>:<hex>:<hex>:...:<hex>
 
 where each ``<hex>`` is one 32-bit MinHash slot. Two digests of equal length are
 compared slot-by-slot; the fraction of matching slots estimates the Jaccard
@@ -30,7 +30,7 @@ _MERSENNE = (1 << 61) - 1          # large prime for the (a*h + b) mod p permuta
 _MAX_HASH = 1 << 32                # slots are reduced to 32 bits for compact serialization
 _DEFAULT_NUM_PERM = 64
 _DEFAULT_SHINGLE = 3
-_SCHEME = "psh1"
+_SCHEME = "ppl1"
 
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
@@ -83,18 +83,17 @@ class SemHasher:
             h = _base_hash(shingle)
             for i in range(self.num_perm):
                 v = ((self._a[i] * h + self._b[i]) % _MERSENNE) % _MAX_HASH
-                if v < mins[i]:
-                    mins[i] = v
+                mins[i] = min(mins[i], v)
         return mins
 
     def digest(self, text: str) -> str:
-        """Return the serialised ``psh1`` digest string for *text*."""
+        """Return the serialised ``ppl1`` digest string for *text*."""
         sig = self.signature(text)
         return f"{_SCHEME}:{self.num_perm}:" + ":".join(format(v, "08x") for v in sig)
 
 
 def parse_digest(digest_str: str) -> list[int]:
-    """Parse a ``psh1`` digest back into its list of slot values."""
+    """Parse a ``ppl1`` digest back into its list of slot values."""
     parts = digest_str.split(":")
     if len(parts) < 3 or parts[0] != _SCHEME:
         raise ValueError(f"not a {_SCHEME} digest: {digest_str!r}")
@@ -102,7 +101,7 @@ def parse_digest(digest_str: str) -> list[int]:
 
 
 def similarity(digest_a: str, digest_b: str) -> float:
-    """Estimate Jaccard similarity (0.0–1.0) from two ``psh1`` digests."""
+    """Estimate Jaccard similarity (0.0–1.0) from two ``ppl1`` digests."""
     sa, sb = parse_digest(digest_a), parse_digest(digest_b)
     if len(sa) != len(sb):
         raise ValueError("digest length mismatch (different num_perm)")
@@ -115,7 +114,7 @@ _default = SemHasher()
 
 
 def digest(text: str) -> str:
-    """Compute the default ``psh1`` digest for *text*."""
+    """Compute the default ``ppl1`` digest for *text*."""
     return _default.digest(text)
 
 

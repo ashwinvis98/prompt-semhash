@@ -19,7 +19,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from prompt_semhash.evaluate import (  # noqa: E402
+from promptprint.evaluate import (  # noqa: E402
     best_threshold_from_sims,
     pair_similarities,
     summary_from_sims,
@@ -67,8 +67,8 @@ def main(argv: list[str] | None = None) -> int:
     _report("lexical", intra, inter)
 
     if args.semantic:
-        from prompt_semhash.backends import fastembed_hasher
-        from prompt_semhash.embedding import semantic_similarity
+        from promptprint.backends import fastembed_hasher
+        from promptprint.embedding import semantic_similarity
 
         hasher = fastembed_hasher(args.model)
         s_intra, s_inter = pair_similarities(

@@ -11,16 +11,17 @@ the fraction of agreeing bits estimates ``1 - angle/pi`` and is monotonic in cos
 Optional **centering**: subtracting a shared reference mean before hashing removes the
 dominant "all-adversarial-text" direction and improves separation / thresholding
 (see RESULTS.md). Centering requires the *same* reference mean on both sides, so
-centered digests use a distinct scheme tag (``pse1c``) and are never comparable to
-uncentered (``pse1``) ones.
+centered digests use a distinct scheme tag (``pps1c``) and are never comparable to
+uncentered (``pps1``) ones.
 
-The embedding function is injectable (see ``backends.py`` for fastembed / ONNX).
+Scheme tags: ``pps1`` = promptprint semantic v1 (raw); ``pps1c`` = the centered
+variant. The embedding function is injectable (see ``backends.py`` for fastembed / ONNX).
 """
 
 from __future__ import annotations
 
 import random
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
 _BITS = 256
 _MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -70,7 +71,7 @@ class SemanticHasher:
 
     @property
     def scheme(self) -> str:
-        return "pse1c" if self.mean is not None else "pse1"
+        return "pps1c" if self.mean is not None else "pps1"
 
     def _ensure_planes(self, dim: int) -> None:
         if self._planes is None:
@@ -116,10 +117,10 @@ def fit_reference_mean(embed_fn: EmbedFn, texts: Sequence[str]) -> list[float]:
 
 
 def parse_semantic_digest(digest_str: str) -> tuple[str, int, list[int]]:
-    """Parse a ``pse1``/``pse1c`` digest into ``(scheme, n_bits, bits)``."""
+    """Parse a ``pps1``/``pps1c`` digest into ``(scheme, n_bits, bits)``."""
     parts = digest_str.split(":")
-    if len(parts) != 3 or parts[0] not in ("pse1", "pse1c"):
-        raise ValueError(f"not a pse1/pse1c digest: {digest_str!r}")
+    if len(parts) != 3 or parts[0] not in ("pps1", "pps1c"):
+        raise ValueError(f"not a pps1/pps1c digest: {digest_str!r}")
     n_bits = int(parts[1])
     return parts[0], n_bits, _hex_to_bits(parts[2], n_bits)
 
@@ -160,7 +161,7 @@ _default_hasher: SemanticHasher | None = None
 
 
 def semantic_digest(text: str) -> str:
-    """Compute the default ``pse1`` digest (loads the default model on first use)."""
+    """Compute the default ``pps1`` digest (loads the default model on first use)."""
     global _default_hasher
     if _default_hasher is None:
         _default_hasher = SemanticHasher()

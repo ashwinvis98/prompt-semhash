@@ -4,8 +4,8 @@ Uses a fake, deterministic embedding function so the LSH logic is tested without
 optional sentence-transformers dependency. Runnable with pytest or directly.
 """
 
-from prompt_semhash import SemanticHasher, compare, digest, semantic_similarity
-from prompt_semhash.embedding import parse_semantic_digest
+from promptprint import SemanticHasher, compare, digest, semantic_similarity
+from promptprint.embedding import parse_semantic_digest
 
 # Fixed vectors keyed by label (dim 8). No model needed.
 _VEC = {
@@ -35,15 +35,15 @@ def test_opposite_vector_flips_all_bits():
 
 
 def test_digest_format():
-    assert _H.digest("a").startswith("pse1:64:")
+    assert _H.digest("a").startswith("pps1:64:")
 
 
 def test_parse_rejects_lexical_digest():
     try:
-        parse_semantic_digest("psh1:64:deadbeef")
+        parse_semantic_digest("ppl1:64:deadbeef")
     except ValueError:
         return
-    raise AssertionError("expected ValueError for a psh1 digest")
+    raise AssertionError("expected ValueError for a ppl1 digest")
 
 
 def test_compare_dispatches_by_scheme():
@@ -64,14 +64,14 @@ def test_compare_rejects_mixed_schemes():
 def test_centering_uses_distinct_scheme_and_blocks_mixed_compare():
     h_raw = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7)
     h_ctr = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, mean=[0.5] * 8)
-    assert h_raw.digest("a").startswith("pse1:")
-    assert h_ctr.digest("a").startswith("pse1c:")
+    assert h_raw.digest("a").startswith("pps1:")
+    assert h_ctr.digest("a").startswith("pps1c:")
     assert semantic_similarity(h_ctr.digest("a"), h_ctr.digest("a")) == 1.0
     try:
         compare(h_raw.digest("a"), h_ctr.digest("a"))
     except ValueError:
         return
-    raise AssertionError("expected ValueError when mixing pse1 and pse1c")
+    raise AssertionError("expected ValueError when mixing pps1 and pps1c")
 
 
 def _run_all() -> None:

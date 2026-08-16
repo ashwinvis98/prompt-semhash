@@ -22,7 +22,7 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from prompt_semhash.digest import SemHasher, normalize  # noqa: E402
+from promptprint.digest import SemHasher, normalize  # noqa: E402
 
 
 def load_texts(path: str, column: str | None, limit: int | None) -> list[str]:
