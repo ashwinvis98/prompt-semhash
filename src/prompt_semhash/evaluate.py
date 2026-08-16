@@ -9,8 +9,9 @@ whether the digest can tell same-family pairs from different-family pairs:
   threshold and reports precision / recall / F1.
 - :func:`best_threshold` sweeps thresholds and returns the best-F1 operating point.
 
-The harness is metric-only and corpus-agnostic: point it at the bundled fixture, or at
-any list of labelled prompts (e.g. a public corpus loaded from CSV).
+Every function takes an optional ``digest_fn`` / ``sim_fn`` so the *same* harness works
+for the lexical digest (default) and the semantic digest — pass
+``digest_fn=hasher.digest, sim_fn=semantic_similarity``.
 """
 
 from __future__ import annotations
@@ -18,28 +19,28 @@ from __future__ import annotations
 from itertools import combinations
 from statistics import mean
 
-from .digest import digest, similarity
+from .digest import digest as _lexical_digest
+from .digest import similarity as _lexical_similarity
 
 
-def _digested(labelled: list[tuple[str, str]]) -> list[tuple[str, str]]:
-    """Return ``(family_label, digest)`` for each ``(text, family_label)`` pair."""
-    return [(label, digest(text)) for text, label in labelled]
+def _digested(labelled, digest_fn):
+    return [(label, digest_fn(text)) for text, label in labelled]
 
 
-def pair_similarities(labelled: list[tuple[str, str]]) -> tuple[list[float], list[float]]:
+def pair_similarities(labelled, digest_fn=_lexical_digest, sim_fn=_lexical_similarity):
     """Return ``(intra_family_sims, inter_family_sims)`` over all unordered pairs."""
-    digs = _digested(labelled)
+    digs = _digested(labelled, digest_fn)
     intra: list[float] = []
     inter: list[float] = []
     for (label_a, dig_a), (label_b, dig_b) in combinations(digs, 2):
-        sim = similarity(dig_a, dig_b)
+        sim = sim_fn(dig_a, dig_b)
         (intra if label_a == label_b else inter).append(sim)
     return intra, inter
 
 
-def summary(labelled: list[tuple[str, str]]) -> dict:
+def summary(labelled, digest_fn=_lexical_digest, sim_fn=_lexical_similarity) -> dict:
     """Report the intra- vs inter-family similarity distributions."""
-    intra, inter = pair_similarities(labelled)
+    intra, inter = pair_similarities(labelled, digest_fn, sim_fn)
     return {
         "n_items": len(labelled),
         "n_pairs_intra": len(intra),
@@ -50,9 +51,11 @@ def summary(labelled: list[tuple[str, str]]) -> dict:
     }
 
 
-def threshold_metrics(labelled: list[tuple[str, str]], threshold: float) -> dict:
+def threshold_metrics(
+    labelled, threshold, digest_fn=_lexical_digest, sim_fn=_lexical_similarity
+) -> dict:
     """Precision/recall/F1 of predicting "same family" when similarity >= *threshold*."""
-    intra, inter = pair_similarities(labelled)
+    intra, inter = pair_similarities(labelled, digest_fn, sim_fn)
     tp = sum(1 for s in intra if s >= threshold)
     fn = sum(1 for s in intra if s < threshold)
     fp = sum(1 for s in inter if s >= threshold)
@@ -72,11 +75,13 @@ def threshold_metrics(labelled: list[tuple[str, str]], threshold: float) -> dict
     }
 
 
-def best_threshold(labelled: list[tuple[str, str]], steps: int = 100) -> dict:
+def best_threshold(
+    labelled, steps: int = 100, digest_fn=_lexical_digest, sim_fn=_lexical_similarity
+) -> dict:
     """Sweep thresholds in ``[0, 1]`` and return the metrics dict with the highest F1."""
-    best = threshold_metrics(labelled, 0.0)
+    best = threshold_metrics(labelled, 0.0, digest_fn, sim_fn)
     for i in range(1, steps + 1):
-        metrics = threshold_metrics(labelled, i / steps)
+        metrics = threshold_metrics(labelled, i / steps, digest_fn, sim_fn)
         if metrics["f1"] > best["f1"]:
             best = metrics
     return best
