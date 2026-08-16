@@ -3,11 +3,16 @@
 Given a labelled set of prompts — ``(prompt_text, family_label)`` pairs — this measures
 whether the digest can tell same-family pairs from different-family pairs:
 
-- :func:`pair_similarities` splits all pairs into intra-family and inter-family.
+- :func:`pair_similarities` splits all pairs into intra-family and inter-family
+  (computing each digest once).
 - :func:`summary` reports the two distributions (a good digest has intra >> inter).
 - :func:`threshold_metrics` treats "same family" as a binary prediction at a similarity
   threshold and reports precision / recall / F1.
 - :func:`best_threshold` sweeps thresholds and returns the best-F1 operating point.
+
+The ``*_from_sims`` helpers work on precomputed similarity lists, so a caller with an
+expensive ``digest_fn`` (an embedding model) computes digests once and then sweeps
+thresholds for free.
 
 Every function takes an optional ``digest_fn`` / ``sim_fn`` so the *same* harness works
 for the lexical digest (default) and the semantic digest — pass
@@ -41,25 +46,28 @@ def pair_similarities(labelled, digest_fn=_lexical_digest, sim_fn=_lexical_simil
 def summary(labelled, digest_fn=_lexical_digest, sim_fn=_lexical_similarity) -> dict:
     """Report the intra- vs inter-family similarity distributions."""
     intra, inter = pair_similarities(labelled, digest_fn, sim_fn)
+    return summary_from_sims(intra, inter, n_items=len(labelled))
+
+
+def summary_from_sims(intra, inter, n_items: int | None = None) -> dict:
+    mi = mean(intra) if intra else 0.0
+    me = mean(inter) if inter else 0.0
     return {
-        "n_items": len(labelled),
+        "n_items": n_items,
         "n_pairs_intra": len(intra),
         "n_pairs_inter": len(inter),
-        "mean_intra": mean(intra) if intra else 0.0,
-        "mean_inter": mean(inter) if inter else 0.0,
-        "separation": (mean(intra) if intra else 0.0) - (mean(inter) if inter else 0.0),
+        "mean_intra": mi,
+        "mean_inter": me,
+        "separation": mi - me,
     }
 
 
-def threshold_metrics(
-    labelled, threshold, digest_fn=_lexical_digest, sim_fn=_lexical_similarity
-) -> dict:
-    """Precision/recall/F1 of predicting "same family" when similarity >= *threshold*."""
-    intra, inter = pair_similarities(labelled, digest_fn, sim_fn)
+def metrics_from_sims(intra, inter, threshold: float) -> dict:
+    """Precision/recall/F1 from precomputed intra/inter similarity lists."""
     tp = sum(1 for s in intra if s >= threshold)
-    fn = sum(1 for s in intra if s < threshold)
+    fn = len(intra) - tp
     fp = sum(1 for s in inter if s >= threshold)
-    tn = sum(1 for s in inter if s < threshold)
+    tn = len(inter) - fp
     precision = tp / (tp + fp) if (tp + fp) else 0.0
     recall = tp / (tp + fn) if (tp + fn) else 0.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
@@ -75,13 +83,27 @@ def threshold_metrics(
     }
 
 
+def best_threshold_from_sims(intra, inter, steps: int = 100) -> dict:
+    """Sweep thresholds over precomputed similarity lists; return the best-F1 metrics."""
+    best = metrics_from_sims(intra, inter, 0.0)
+    for i in range(1, steps + 1):
+        m = metrics_from_sims(intra, inter, i / steps)
+        if m["f1"] > best["f1"]:
+            best = m
+    return best
+
+
+def threshold_metrics(
+    labelled, threshold, digest_fn=_lexical_digest, sim_fn=_lexical_similarity
+) -> dict:
+    """Precision/recall/F1 of predicting "same family" when similarity >= *threshold*."""
+    intra, inter = pair_similarities(labelled, digest_fn, sim_fn)
+    return metrics_from_sims(intra, inter, threshold)
+
+
 def best_threshold(
     labelled, steps: int = 100, digest_fn=_lexical_digest, sim_fn=_lexical_similarity
 ) -> dict:
-    """Sweep thresholds in ``[0, 1]`` and return the metrics dict with the highest F1."""
-    best = threshold_metrics(labelled, 0.0, digest_fn, sim_fn)
-    for i in range(1, steps + 1):
-        metrics = threshold_metrics(labelled, i / steps, digest_fn, sim_fn)
-        if metrics["f1"] > best["f1"]:
-            best = metrics
-    return best
+    """Compute digests once, then sweep thresholds for the best-F1 operating point."""
+    intra, inter = pair_similarities(labelled, digest_fn, sim_fn)
+    return best_threshold_from_sims(intra, inter, steps)

@@ -138,7 +138,12 @@ python eval/run_eval.py                         # bundled fixtures (lexical)
 python eval/run_eval.py --corpus prompts.csv    # your own data (columns: text,label)
 python eval/semantic_eval.py                    # lexical vs semantic on the fixtures
 python eval/cluster_corpus.py corpus.parquet --column text --limit 50000   # redundancy in a real corpus
+python eval/family_recovery.py labelled.csv --text-col text --label-col category --semantic
 ```
+
+**[RESULTS.md](RESULTS.md)** has a full evaluation on public data (HackAPrompt,
+JailbreakBench): the lexical digest collapses real attacks ~10x; the semantic digest
+beats it when wording differs but is limited by general embeddings.
 
 ## Roadmap
 
@@ -146,7 +151,8 @@ python eval/cluster_corpus.py corpus.parquet --column text --limit 50000   # red
 - [x] Evaluation harness (intra/inter-family similarity, threshold F1) + labelled fixtures.
 - [x] Embedding-derived semantic digest (SimHash / LSH) behind the same interface (experimental).
 - [x] Corpus clustering tool (`eval/cluster_corpus.py`) + lexical redundancy measured on HackAPrompt.
-- [ ] Family-recovery on a public corpus with distinct-intent labels (in progress).
+- [x] Family-recovery on distinct-intent labels (JailbreakBench) — see [RESULTS.md](RESULTS.md).
+- [ ] Domain-adapted embedding + calibration to strengthen the semantic digest.
 - [ ] A STIX observable property carrying the digest, for cross-instance correlation.
 
 ## Relationship to `adversarial-ai-cti`
