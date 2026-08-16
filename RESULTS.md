@@ -7,21 +7,26 @@ embeddings (`BAAI/bge-small-en-v1.5`, and `bge-base` where noted).
 
 ## 1. Redundancy in a real corpus (lexical)
 
-`eval/cluster_corpus.py` on a 20,000-prompt sample of HackAPrompt `user_input`:
+`eval/cluster_corpus.py` on HackAPrompt `user_input` (579,887 attack inputs):
 
 | metric | value |
 |---|---|
-| total prompts | 20,000 |
-| unique after normalisation | 3,132 (15.7%) |
-| **exact-duplicate rate** | **84.3%** |
-| near-duplicate clusters (LSH, 16 bands) | 2,026 |
-| unique prompts pulled into multi-member clusters | 46.5% |
-| largest cluster | 364 variants of an "I have been pwned" injection |
+| total attack inputs | 579,887 |
+| unique after normalisation | 249,484 |
+| **exact-duplicate rate (full set)** | **57.0%** |
+| exact-dup by model | text-davinci-003 38% · FlanT5-XXL 55% · gpt-3.5-turbo 58% |
+| exact-dup by challenge level | 32% – 100% |
 
-Net: **20,000 attempts collapse to ~2,026 distinct behaviours (~10x)**. The digest
-groups reworded variants — including a `grammar`/`grammer` typo — that exact matching
-treats as unrelated. (HackAPrompt is a competition, so redundancy is unusually high;
-this shows the mechanism works, not that every feed is 84% duplicates.)
+On a random 40,000-prompt slice (exact-dup rate is sample-size dependent, so a slice
+reads lower than the full population): 32% exact duplicates, and near-duplicate
+clustering pulls a further ~59% of the *unique* prompts into groups — an overall ~3x
+collapse of the slice into distinct behaviours. The digest groups reworded variants —
+including a `grammar`/`grammer` typo — that exact matching treats as unrelated.
+
+Reading: real attack corpora carry substantial redundancy — over half exact duplicates
+at full scale, plus heavy near-duplication — so de-duplicating / correlating by digest
+materially cuts what an analyst reviews. The exact collapse factor depends on the feed
+and sample size; HackAPrompt is a competition, so its redundancy is on the high side.
 
 ## 2. Paraphrase fixtures (lexical vs semantic)
 
@@ -59,7 +64,8 @@ all harmful-request text close together (inter ≈ 0.67), which caps category se
 ## Verdict
 
 - **Lexical digest — proven value.** Strong, cheap, dependency-free near-duplicate
-  correlation. On real data it collapses reworded attacks ~10x. This is a genuine,
+  correlation. On real data it removes over half a corpus as exact
+  duplicates and collapses much of the rest as near-duplicates. This is a genuine,
   usable capability today.
 - **Semantic digest — works, but not yet strong.** It consistently beats the lexical
   digest when wording differs, so the mechanism is real. With off-the-shelf general

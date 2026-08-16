@@ -142,8 +142,9 @@ python eval/family_recovery.py labelled.csv --text-col text --label-col category
 ```
 
 **[RESULTS.md](RESULTS.md)** has a full evaluation on public data (HackAPrompt,
-JailbreakBench): the lexical digest collapses real attacks ~10x; the semantic digest
-beats it when wording differs but is limited by general embeddings.
+JailbreakBench): the lexical digest removes the majority of duplicate/near-duplicate
+attacks; the semantic digest beats it when wording differs but is limited by general
+embeddings.
 
 ## Roadmap
 
