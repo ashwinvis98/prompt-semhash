@@ -76,12 +76,31 @@ prompt-semhash compare-digests psh1:64:... psh1:64:...
 
 Digest format: `psh1:<num_perm>:<hex>:<hex>:...`.
 
+## Evaluation
+
+`eval/run_eval.py` measures whether the digest separates same-family prompts from
+different-family ones on a labelled set. On the bundled fixtures:
+
+| Fixture | mean intra-family sim | mean inter-family sim | separates? |
+|---|---|---|---|
+| Lexical — reworded near-duplicates | 0.69 | 0.00 | yes (F1 = 1.00) |
+| Semantic — same intent, different words | 0.00 | 0.00 | no |
+
+The lexical digest cleanly separates reworded near-duplicates and collapses on
+semantic paraphrase — the expected limit of a lexical method, and the motivation for
+the embedding-derived digest on the roadmap.
+
+```bash
+python eval/run_eval.py                       # bundled fixtures
+python eval/run_eval.py --corpus prompts.csv  # your own data (columns: text,label)
+```
+
 ## Roadmap
 
 - [x] Lexical MinHash baseline + deterministic digest format + compare.
-- [ ] Embedding-derived semantic digest (quantized/LSH) behind the same interface.
-- [ ] Evaluation on a public prompt-attack corpus: does clustering by digest recover
-      known attack families, and where does the lexical baseline fail?
+- [x] Evaluation harness (intra/inter-family similarity, threshold F1) + labelled fixtures.
+- [ ] Embedding-derived semantic digest (quantized / LSH) behind the same interface.
+- [ ] Run the harness on a public corpus (e.g. HackAPrompt) and report family recovery.
 - [ ] A STIX observable property carrying the digest, for cross-instance correlation.
 
 ## Relationship to `adversarial-ai-cti`
