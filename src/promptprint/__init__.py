@@ -10,6 +10,7 @@ Use :func:`compare` to score two digests of the *same* scheme without caring whi
 """
 
 from .digest import (
+    LexicalHasher,
     SemHasher,
     digest,
     normalize,
@@ -25,7 +26,7 @@ from .embedding import (
     semantic_similarity,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def compare(digest_a: str, digest_b: str) -> float:
@@ -42,6 +43,7 @@ def compare(digest_a: str, digest_b: str) -> float:
 
 
 __all__ = [
+    "LexicalHasher",
     "SemHasher",
     "SemanticHasher",
     "__version__",

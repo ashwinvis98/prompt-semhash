@@ -74,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
         s_intra, s_inter = pair_similarities(
             data, digest_fn=hasher.digest, sim_fn=semantic_similarity
         )
-        _report(f"semantic", s_intra, s_inter)
+        _report("semantic", s_intra, s_inter)
     return 0
 
 

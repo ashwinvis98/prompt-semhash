@@ -22,7 +22,7 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from promptprint.digest import SemHasher, normalize  # noqa: E402
+from promptprint.digest import LexicalHasher, normalize  # noqa: E402
 
 
 def load_texts(path: str, column: str | None, limit: int | None) -> list[str]:
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"unique (normalised)   : {len(unique)}  ({100 * len(unique) / total:.1f}%)")
     print(f"exact-duplicate rate  : {100 * (total - len(unique)) / total:.1f}%")
 
-    hasher = SemHasher()
+    hasher = LexicalHasher()
     signatures = [hasher.signature(t) for t in unique]
     clusters = lsh_cluster(signatures, args.bands)
     multi = sorted((c for c in clusters if len(c) > 1), key=len, reverse=True)

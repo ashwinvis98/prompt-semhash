@@ -16,11 +16,11 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.dirname(__file__))
 
+from fixtures import LEXICAL_FAMILIES, SEMANTIC_FAMILIES  # noqa: E402
+
 from promptprint.backends import fastembed_hasher  # noqa: E402
 from promptprint.embedding import semantic_similarity  # noqa: E402
 from promptprint.evaluate import summary  # noqa: E402
-
-from fixtures import LEXICAL_FAMILIES, SEMANTIC_FAMILIES  # noqa: E402
 
 
 def _report(name: str, data, hasher) -> None:

@@ -35,7 +35,28 @@ def test_opposite_vector_flips_all_bits():
 
 
 def test_digest_format():
-    assert _H.digest("a").startswith("pps1:64:")
+    # scheme : model_id : n_bits : hex
+    assert _H.digest("a").startswith("pps1:default:64:")
+
+
+def test_different_models_refuse_to_compare():
+    h_bge = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, model_id="bge")
+    h_e5 = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, model_id="e5")
+    try:
+        semantic_similarity(h_bge.digest("a"), h_e5.digest("a"))
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError comparing digests from different models")
+
+
+def test_different_reference_means_refuse_to_compare():
+    h1 = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, mean=[0.5] * 8)
+    h2 = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, mean=[0.9] * 8)
+    try:
+        semantic_similarity(h1.digest("a"), h2.digest("a"))
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError comparing digests with different means")
 
 
 def test_parse_rejects_lexical_digest():

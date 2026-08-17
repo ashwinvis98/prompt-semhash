@@ -33,7 +33,7 @@ def fastembed_hasher(
     def embed(text: str):
         return list(next(iter(model.embed([text]))))
 
-    return SemanticHasher(embed_fn=embed, n_bits=n_bits, seed=seed, mean=mean)
+    return SemanticHasher(embed_fn=embed, n_bits=n_bits, seed=seed, mean=mean, model_id=model_name)
 
 
 def onnx_hasher(
@@ -86,4 +86,4 @@ def onnx_hasher(
             pooled = next(o for o in outs if o.ndim == 2)
         return pooled[0].tolist()
 
-    return SemanticHasher(embed_fn=embed, n_bits=n_bits, seed=seed, mean=mean)
+    return SemanticHasher(embed_fn=embed, n_bits=n_bits, seed=seed, mean=mean, model_id=repo_id)
