@@ -197,7 +197,7 @@ than lexical, with a domain-tuned model and centering helping most.
 This is the correlation building block for
 [`adversarial-ai-cti`](https://github.com/ashwinvis98/adversarial-ai-cti), which
 represents prompt attacks as STIX 2.1. It is packaged separately so it stays useful
-on its own — with MISP, another platform, or no platform at all.
+on its own — with OpenCTI, MISP, another platform, or no platform at all.
 
 ## Prior art
 
@@ -215,14 +215,12 @@ overlaps closely:
   uses, and it independently arrives at the same model-identity safeguard. 0DIN is
   Mozilla-backed with a real research program (JEF, SusFactor); `promptlsh` uses their
   public jailbreak embedding as its strongest backend.
-- **MinishLab `semhash`** — semantic text-deduplication (embeddings + ANN). Naming note:
-  this project was `prompt-semhash`, then `promptprint`; both names collided with existing
-  projects, hence `promptlsh`.
+- **MinishLab `semhash`** — semantic text-deduplication (embeddings + ANN).
 - **SemDeDup** (embedding-similarity corpus dedup); **Shen et al. "Do Anything Now"**
   (arXiv:2308.03825, CCS'24 — clustering in-the-wild jailbreaks); **"Improved LLM Jailbreak
   Detection via Pretrained Embeddings"** (arXiv:2412.01547).
 
-**What's actually different here**, given all of the above, is narrow and honest:
+**What this adds over the above:**
 
 - **Standards-based, not an SDK.** The digest is defined to sit on a **STIX 2.1 observable**
   (see [`adversarial-ai-cti`](https://github.com/ashwinvis98/adversarial-ai-cti)), so any
@@ -236,7 +234,7 @@ overlaps closely:
   for when you cannot run an embedding model at all.
 
 `promptlsh` is best understood as the small, open, vendor-neutral interchange piece that
-sits *alongside* tools like 0DIN's — not a replacement for them.
+sits *alongside* tools like 0DIN's.
 
 ## License
 

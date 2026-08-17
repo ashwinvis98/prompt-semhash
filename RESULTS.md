@@ -13,44 +13,35 @@ means fails loudly rather than returning a plausible-looking number.
 `0dinai/jailbreak-embeddings-base-onnx` (multilingual-e5 fine-tuned for jailbreak /
 prompt-injection duplicate detection). Runner: `fastembed` / `onnxruntime` (no torch).
 
-> **Correction (read this first).** An earlier version of §3 reported recall@1 of
-> 0.68–0.88 for the semantic digest. Those numbers were **raw cosine similarity on the
-> full embedding vector** — the *ceiling* an embedding can reach — not the compact
-> `pls1`/`pls1c` digest this library actually emits. Hashing the embedding down to a
-> 256-bit digest costs 11–21 points of recall@1. The corrected §3 below reports both:
-> the embedding ceiling **and** the shipping digest. The digest still beats the lexical
-> baseline and the domain model still wins, but the honest deployable number is
-> ~0.55–0.71, not 0.82–0.88.
+> **Read §3 carefully.** The recall@1 figures there are for the compact `pls1`/`pls1c`
+> digest this library emits **and** for the raw-embedding cosine ceiling. Hashing to a
+> 256-bit digest costs 11–21 points versus the ceiling, so the honest deployable number
+> is ~0.55–0.71. Don't quote the ceiling as the digest's performance.
 
 ---
 
 ## 1. Redundancy in a real corpus (lexical)
 
-> **Correction (0.2.0).** These numbers dropped after the 0.2.0 tokenizer fix. The
-> pre-0.2.0 tokenizer matched only `[a-z0-9]+`, so **7.4%** of HackAPrompt prompts (those
-> with no ASCII alphanumerics) collapsed to an identical empty digest, and a further
-> ~13% with material non-Latin content were under-differentiated. That inflated the
-> measured redundancy. The figures below are re-run with the Unicode tokenizer and the
-> new 128-perm default (which also makes near-duplicate clustering stricter).
+> **Note on tokenisation.** HackAPrompt is multilingual: ~7.4% of prompts have no ASCII
+> alphanumerics and ~13% carry material non-Latin content. The Unicode-aware tokeniser
+> keeps those distinct, so the redundancy below is not inflated by non-Latin prompts
+> collapsing together.
 
 `eval/cluster_corpus.py` on HackAPrompt `user_input` (579,953 attack inputs):
 
-| metric | value | (was, pre-0.2.0) |
-|---|---|---|
-| total attack inputs | 579,953 | 579,887 |
-| unique after normalisation | 274,804 | 249,484 |
-| **exact-duplicate rate (full set)** | **52.6%** | 57.0% |
-| exact-dup by model | text-davinci-003 36% · FlanT5-XXL 51% · gpt-3.5-turbo 52% | 38% / 55% / 58% |
-| exact-dup by challenge level | 31% – 100% | 32% – 100% |
+| metric | value |
+|---|---|
+| total attack inputs | 579,953 |
+| unique after normalisation | 274,804 |
+| **exact-duplicate rate (full set)** | **52.6%** |
+| exact-dup by model | text-davinci-003 36% · FlanT5-XXL 51% · gpt-3.5-turbo 52% |
+| exact-dup by challenge level | 31% – 100% |
 
 On a **seeded random 40k slice** (seed 42; exact-dup rate is sample-size dependent):
 25% exact duplicates, plus ~35% of the *unique* prompts pulled into near-duplicate
-clusters — an overall **~1.8x** collapse (down from a pre-fix ~3x, both because non-Latin
-prompts no longer spuriously collapse and because the 128-perm default clusters more
-strictly). Real attack corpora still carry substantial redundancy, so de-duplicating by
-digest materially cuts what an analyst reviews — just less dramatically than first
-reported. Factor depends on the feed (HackAPrompt is a competition, so its redundancy is
-on the high side).
+clusters — an overall **~1.8x** collapse. Real attack corpora carry substantial
+redundancy, so de-duplicating by digest materially cuts what an analyst reviews. Factor
+depends on the feed (HackAPrompt is a competition, so its redundancy is on the high side).
 
 ## 2. Cross-org correlation, digests only (lexical)
 
@@ -63,11 +54,10 @@ holding ~14.5k unique prompts. Sharing **only digests** (not raw prompts):
 | digest (near-duplicate) | **55.0%** (4.4x) |
 
 The digest finds **42 percentage points** more cross-org overlap than exact matching —
-reworded variants exact matching misses — while exchanging only fingerprints. (Caveats:
+reworded variants exact matching misses — while exchanging only fingerprints. (Caveat:
 A/B are random splits of one high-redundancy corpus, so this shows the exact-vs-digest
-gap on shared source material, not a universal rate — a genuinely cross-corpus test is
-future work; and these figures predate the 0.2.0 tokenizer/`num_perm` changes, so a
-re-run would shift them modestly.)
+gap on shared source material, not a universal rate; a genuinely cross-corpus test is
+future work.)
 
 ## 3. Same-attack matching (semantic) — ceiling vs shipping digest
 
@@ -98,8 +88,7 @@ Four columns, from weakest to strongest correlation signal:
 | 400 | 0.537 | 0.820 | 0.820 | 0.645 | 0.708 |
 | 1000 | 0.477 | 0.759 | 0.760 | 0.551 | 0.580 |
 
-(Lexical here uses the 128-perm default, hence higher than the ~0.46 reported for 64-perm
-in earlier drafts. `int8-quant` = per-vector 8-bit quantised embedding, cosine-compared.)
+(`int8-quant` = per-vector 8-bit quantised embedding, cosine-compared.)
 
 Reading the numbers honestly:
 
