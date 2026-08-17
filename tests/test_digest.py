@@ -1,9 +1,9 @@
-"""Tests for the promptprint lexical digest.
+"""Tests for the promptlsh lexical digest.
 
 Runnable either with pytest (`python -m pytest`) or directly (`python tests/test_digest.py`).
 """
 
-from promptprint import (
+from promptlsh import (
     LexicalHasher,
     SemHasher,
     digest,
@@ -20,7 +20,7 @@ _UNRELATED = "The weather in Paris is lovely at this time of year"
 # produced by earlier versions. It guards against an accidental algorithm change; it does
 # NOT (and cannot) guard against a deliberate one — bump the scheme tag (ppl2) for that.
 _PINNED_S1_DIGEST = (
-    "ppl1:128:187fa139:1b3c3236:3074e26b:62105d56:689893b7:0673a7cf:66d3b2cd:3aafec4e:"
+    "plm1:128:187fa139:1b3c3236:3074e26b:62105d56:689893b7:0673a7cf:66d3b2cd:3aafec4e:"
     "00c8ec96:3b7cb9f6:08823a89:03f6ed43:5810a50c:17be2a4e:2677b28e:0f297a9c:47d9cc32:"
     "13f5fe3b:17fdd3bc:0a1887dd:01f253f4:052b73c8:16d77c61:1eca4cbe:0fa9a402:1039a394:"
     "4d5e8b7d:0c9fc58d:0df93114:74db5cf2:1861ad0f:44c40e4e:2729c106:253e4043:0bba8edb:"
@@ -79,7 +79,7 @@ def test_digest_round_trips():
 
 
 def test_digest_format():
-    assert digest(_S1).startswith("ppl1:128:")
+    assert digest(_S1).startswith("plm1:128:")
 
 
 def test_parse_rejects_foreign_digest():
@@ -87,13 +87,13 @@ def test_parse_rejects_foreign_digest():
         parse_digest("ssdeep:3:abc")
     except ValueError:
         return
-    raise AssertionError("expected ValueError for a non-ppl1 digest")
+    raise AssertionError("expected ValueError for a non-plm1 digest")
 
 
 def test_parse_rejects_slot_count_mismatch():
     # declared 128 but only three slots present
     try:
-        parse_digest("ppl1:128:deadbeef:deadbeef:deadbeef")
+        parse_digest("plm1:128:deadbeef:deadbeef:deadbeef")
     except ValueError:
         return
     raise AssertionError("expected ValueError when declared num_perm != slot count")

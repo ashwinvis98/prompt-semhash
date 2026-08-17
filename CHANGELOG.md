@@ -1,12 +1,28 @@
 # Changelog
 
-All notable changes to `promptprint` are recorded here. The format follows
+All notable changes to `promptlsh` are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-> **Digest stability.** Before 1.0.0 the digest formats (`ppl1`, `pps1`, `pps1c`) are
+> **Digest stability.** Before 1.0.0 the digest formats (`plm1`, `pls1`, `pls1c`) are
 > **not** guaranteed stable across releases. A digest stored under one 0.x version may
 > not be comparable to one produced by another. From 1.0.0, any incompatible change to a
-> digest's bytes will come with a new scheme tag (`ppl2`, ...), never a silent change.
+> digest's bytes will come with a new scheme tag (`plm2`, ...), never a silent change.
+
+## [0.3.0] - 2026-08-16
+
+### Changed
+- **Renamed `promptprint` → `promptlsh`.** The previous name collided with existing
+  projects (a prompt-based biometrics study and an AI model-router, both "PromptPrint").
+  `promptlsh` is free on PyPI/npm and names the method (locality-sensitive hashing). The
+  import path, CLI, and the STIX property (`x_promptprint_digest` → `x_promptlsh_digest`)
+  change accordingly.
+- **Scheme tags renamed** to match the name and to name the LSH method used:
+  `ppl1` → `plm1` (MinHash / lexical), `pps1` → `pls1` (SimHash / semantic),
+  `pps1c` → `pls1c` (centered). **Digest bytes are unchanged**; only the scheme prefix
+  differs, so a re-tagged 0.2.0 digest compares identically.
+- Prior-art expanded to cite **0DIN**'s prompt-similarity SDK and jailbreak threat feed;
+  novelty narrowed to the vendor-neutral, STIX-native, publicly-measured interchange layer
+  (a vendor SDK cannot, by construction, be the cross-vendor exchange format).
 
 ## [0.2.0] - 2026-08-16
 
@@ -29,7 +45,7 @@ digests are not comparable to 0.2.0 digests.**
 ### Changed
 - **Default `num_perm` 64 → 128** for lower-variance similarity estimates.
 - **Semantic digest format now encodes model and reference-mean identity** and enforces
-  it: `pps1:<model_id>:<n_bits>:<hex>` and `pps1c:<model_id>:<ref_id>:<n_bits>:<hex>`.
+  it: `pls1:<model_id>:<n_bits>:<hex>` and `pls1c:<model_id>:<ref_id>:<n_bits>:<hex>`.
   `semantic_similarity` raises when comparing digests from different models, reference
   means, schemes, or bit-lengths, instead of returning a meaningless number.
 - `parse_digest` now validates the declared `num_perm` against the actual slot count.
@@ -47,7 +63,7 @@ First public release, renamed from `prompt-semhash` (which collided with the est
 MinishLab `semhash` semantic-dedup library).
 
 ### Added
-- Lexical MinHash digest (`ppl1`), dependency-free, with a deterministic serialised format.
-- Embedding-backed semantic SimHash digest (`pps1`, `pps1c` centered) behind a shared
+- Lexical MinHash digest (`plm1`), dependency-free, with a deterministic serialised format.
+- Embedding-backed semantic SimHash digest (`pls1`, `pls1c` centered) behind a shared
   `compare` interface, with fastembed / ONNX backends.
 - Evaluation harness and scripts; `RESULTS.md` with a full public-data evaluation.

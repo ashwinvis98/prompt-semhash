@@ -17,15 +17,15 @@ against another produced with the *same embedding model* and — for the centere
 — the *same reference mean*. Both identities are encoded in the digest string, and
 :func:`semantic_similarity` refuses to compare mismatched ones:
 
-    pps1:<model_id>:<n_bits>:<hex>                (raw)
-    pps1c:<model_id>:<ref_id>:<n_bits>:<hex>      (mean-centered)
+    pls1:<model_id>:<n_bits>:<hex>                (raw)
+    pls1c:<model_id>:<ref_id>:<n_bits>:<hex>      (mean-centered)
 
 ``model_id`` is a caller-supplied label for the embedding model; ``ref_id`` is a short
 hash of the reference mean, so two parties can confirm they centered on the same vector.
 
 Optional **centering** (subtracting a shared reference mean before hashing) removes the
 dominant "all-adversarial-text" direction and improves separation/thresholding (see
-RESULTS.md). It uses the distinct scheme tag ``pps1c`` and is never comparable to ``pps1``.
+RESULTS.md). It uses the distinct scheme tag ``pls1c`` and is never comparable to ``pls1``.
 The embedding function is injectable (see ``backends.py`` for fastembed / ONNX).
 """
 
@@ -110,7 +110,7 @@ class SemanticHasher:
 
     @property
     def scheme(self) -> str:
-        return "pps1c" if self.mean is not None else "pps1"
+        return "pls1c" if self.mean is not None else "pls1"
 
     def _ensure_planes(self, dim: int) -> None:
         if self._planes is None:
@@ -142,8 +142,8 @@ class SemanticHasher:
         bits = self.signature_bits(self.embed_fn(text))
         hexbits = _bits_to_hex(bits)
         if self.mean is not None:
-            return f"pps1c:{self.model_id}:{self.ref_id}:{self.n_bits}:{hexbits}"
-        return f"pps1:{self.model_id}:{self.n_bits}:{hexbits}"
+            return f"pls1c:{self.model_id}:{self.ref_id}:{self.n_bits}:{hexbits}"
+        return f"pls1:{self.model_id}:{self.n_bits}:{hexbits}"
 
 
 def fit_reference_mean(embed_fn: EmbedFn, texts: Sequence[str]) -> list[float]:
@@ -162,17 +162,17 @@ def fit_reference_mean(embed_fn: EmbedFn, texts: Sequence[str]) -> list[float]:
 def parse_semantic_digest(digest_str: str) -> tuple[str, str, str | None, int, list[int]]:
     """Parse a semantic digest into ``(scheme, model_id, ref_id, n_bits, bits)``.
 
-    ``ref_id`` is ``None`` for the uncentered ``pps1`` scheme.
+    ``ref_id`` is ``None`` for the uncentered ``pls1`` scheme.
     """
     parts = digest_str.split(":")
     scheme = parts[0]
-    if scheme == "pps1" and len(parts) == 4:
+    if scheme == "pls1" and len(parts) == 4:
         _, model_id, n_bits_s, hexbits = parts
         ref_id: str | None = None
-    elif scheme == "pps1c" and len(parts) == 5:
+    elif scheme == "pls1c" and len(parts) == 5:
         _, model_id, ref_id, n_bits_s, hexbits = parts
     else:
-        raise ValueError(f"not a pps1/pps1c digest: {digest_str!r}")
+        raise ValueError(f"not a pls1/pls1c digest: {digest_str!r}")
     n_bits = int(n_bits_s)
     return scheme, model_id, ref_id, n_bits, _hex_to_bits(hexbits, n_bits)
 
@@ -222,7 +222,7 @@ _default_hasher: SemanticHasher | None = None
 
 
 def semantic_digest(text: str) -> str:
-    """Compute the default ``pps1`` digest (loads the default model on first use)."""
+    """Compute the default ``pls1`` digest (loads the default model on first use)."""
     global _default_hasher
     if _default_hasher is None:
         _default_hasher = SemanticHasher(model_id=_MODEL)

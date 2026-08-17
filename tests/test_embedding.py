@@ -4,8 +4,8 @@ Uses a fake, deterministic embedding function so the LSH logic is tested without
 optional sentence-transformers dependency. Runnable with pytest or directly.
 """
 
-from promptprint import SemanticHasher, compare, digest, semantic_similarity
-from promptprint.embedding import parse_semantic_digest
+from promptlsh import SemanticHasher, compare, digest, semantic_similarity
+from promptlsh.embedding import parse_semantic_digest
 
 # Fixed vectors keyed by label (dim 8). No model needed.
 _VEC = {
@@ -36,7 +36,7 @@ def test_opposite_vector_flips_all_bits():
 
 def test_digest_format():
     # scheme : model_id : n_bits : hex
-    assert _H.digest("a").startswith("pps1:default:64:")
+    assert _H.digest("a").startswith("pls1:default:64:")
 
 
 def test_different_models_refuse_to_compare():
@@ -61,10 +61,10 @@ def test_different_reference_means_refuse_to_compare():
 
 def test_parse_rejects_lexical_digest():
     try:
-        parse_semantic_digest("ppl1:64:deadbeef")
+        parse_semantic_digest("plm1:64:deadbeef")
     except ValueError:
         return
-    raise AssertionError("expected ValueError for a ppl1 digest")
+    raise AssertionError("expected ValueError for a plm1 digest")
 
 
 def test_compare_dispatches_by_scheme():
@@ -85,14 +85,14 @@ def test_compare_rejects_mixed_schemes():
 def test_centering_uses_distinct_scheme_and_blocks_mixed_compare():
     h_raw = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7)
     h_ctr = SemanticHasher(embed_fn=lambda t: _VEC[t], n_bits=64, seed=7, mean=[0.5] * 8)
-    assert h_raw.digest("a").startswith("pps1:")
-    assert h_ctr.digest("a").startswith("pps1c:")
+    assert h_raw.digest("a").startswith("pls1:")
+    assert h_ctr.digest("a").startswith("pls1c:")
     assert semantic_similarity(h_ctr.digest("a"), h_ctr.digest("a")) == 1.0
     try:
         compare(h_raw.digest("a"), h_ctr.digest("a"))
     except ValueError:
         return
-    raise AssertionError("expected ValueError when mixing pps1 and pps1c")
+    raise AssertionError("expected ValueError when mixing pls1 and pls1c")
 
 
 def _run_all() -> None:

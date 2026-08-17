@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from fixtures import LEXICAL_FAMILIES, SEMANTIC_FAMILIES  # noqa: E402
 
-from promptprint.evaluate import best_threshold, summary  # noqa: E402
+from promptlsh.evaluate import best_threshold, summary  # noqa: E402
 
 
 def _report(name: str, labelled: list[tuple[str, str]]) -> None:

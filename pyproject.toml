@@ -3,8 +3,8 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "promptprint"
-version = "0.2.0"
+name = "promptlsh"
+version = "0.3.0"
 description = "Fingerprint for prompt attacks: a similarity digest (fuzzy hash) for correlating reworded adversarial prompts."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,11 +27,11 @@ onnx = ["onnxruntime>=1.16", "tokenizers>=0.15", "huggingface_hub>=0.20", "numpy
 dev = ["pytest>=7", "ruff>=0.4", "mypy>=1.8"]
 
 [project.urls]
-Homepage = "https://github.com/ashwinvis98/promptprint"
-Repository = "https://github.com/ashwinvis98/promptprint"
+Homepage = "https://github.com/ashwinvis98/promptlsh"
+Repository = "https://github.com/ashwinvis98/promptlsh"
 
 [project.scripts]
-promptprint = "promptprint.cli:main"
+promptlsh = "promptlsh.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

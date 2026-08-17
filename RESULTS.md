@@ -2,8 +2,8 @@
 
 An honest, reproducible evaluation of the similarity digest on public data. Numbers are
 about public datasets (HackAPrompt, JailbreakBench, HarmBench, WildJailbreak); no data
-is committed to this repo. Lexical digest = `ppl1`; semantic digest = `pps1` (SimHash
-over embeddings), `pps1c` when mean-centered. Semantic digests encode the embedding
+is committed to this repo. Lexical digest = `plm1`; semantic digest = `pls1` (SimHash
+over embeddings), `pls1c` when mean-centered. Semantic digests encode the embedding
 model id (and, when centered, a reference-mean id), so comparing mismatched models or
 means fails loudly rather than returning a plausible-looking number.
 
@@ -16,7 +16,7 @@ prompt-injection duplicate detection). Runner: `fastembed` / `onnxruntime` (no t
 > **Correction (read this first).** An earlier version of §3 reported recall@1 of
 > 0.68–0.88 for the semantic digest. Those numbers were **raw cosine similarity on the
 > full embedding vector** — the *ceiling* an embedding can reach — not the compact
-> `pps1`/`pps1c` digest this library actually emits. Hashing the embedding down to a
+> `pls1`/`pls1c` digest this library actually emits. Hashing the embedding down to a
 > 256-bit digest costs 11–21 points of recall@1. The corrected §3 below reports both:
 > the embedding ceiling **and** the shipping digest. The digest still beats the lexical
 > baseline and the domain model still wins, but the honest deployable number is
@@ -78,22 +78,22 @@ rewrite the top match among N candidates (recall@1)?
 
 Four columns, from weakest to strongest correlation signal:
 
-- **lexical (`ppl1`)** — the dependency-free baseline.
+- **lexical (`plm1`)** — the dependency-free baseline.
 - **cosine ceiling** — raw cosine on the full float embedding. Not a digest; the upper
   bound of what the embedding could achieve if you shipped and compared full vectors.
-- **digest (`pps1`)** — the 256-bit SimHash digest this library emits.
-- **digest (`pps1c`)** — the same, mean-centered.
+- **digest (`pls1`)** — the 256-bit SimHash digest this library emits.
+- **digest (`pls1c`)** — the same, mean-centered.
 
 **bge-small (general model — clean out-of-distribution reference):**
 
-| N candidates | lexical | cosine ceiling | int8-quant | digest `pps1` | digest `pps1c` |
+| N candidates | lexical | cosine ceiling | int8-quant | digest `pls1` | digest `pls1c` |
 |---|---|---|---|---|---|
 | 400 | 0.537 | 0.767 | 0.767 | 0.560 | 0.613 |
 | 1000 | 0.477 | 0.683 | 0.684 | 0.455 | 0.534 |
 
 **0din (domain-tuned model):**
 
-| N candidates | lexical | cosine ceiling | int8-quant | digest `pps1` | digest `pps1c` |
+| N candidates | lexical | cosine ceiling | int8-quant | digest `pls1` | digest `pls1c` |
 |---|---|---|---|---|---|
 | 400 | 0.537 | 0.820 | 0.820 | 0.645 | 0.708 |
 | 1000 | 0.477 | 0.759 | 0.760 | 0.551 | 0.580 |
@@ -111,17 +111,17 @@ Reading the numbers honestly:
 - **An 8-bit quantised embedding keeps essentially the whole ceiling** (0.767 vs 0.767,
   0.820 vs 0.820) at ~384 bytes/vector. So the honest tradeoff is a size/fidelity curve,
   not "digest vs nothing": full embedding (≈1.5 KB, ceiling) → int8-quant (≈384 B,
-  ~ceiling) → SimHash `pps1`/`pps1c` (32 B, −11–21 pts). Pick by your byte budget and how
+  ~ceiling) → SimHash `pls1`/`pls1c` (32 B, −11–21 pts). Pick by your byte budget and how
   much you care about not shipping something near-invertible to an embedding.
 - The **domain-tuned model wins** at both ceiling and digest.
-- **Centering (`pps1c`) helps the digest** by ~5–6 points and is essentially free.
+- **Centering (`pls1c`) helps the digest** by ~5–6 points and is essentially free.
 
 **What the hashing buys, measured (the "why SimHash and not a quantised embedding?"
 question).** If you can exchange ~384 bytes per prompt, ship the int8-quantised embedding —
 it is within noise of the ceiling and far ahead of the SimHash digest. The 256-bit
-`pps1`/`pps1c` digest earns its place only where a 32-byte fingerprint matters, or where
+`pls1`/`pls1c` digest earns its place only where a 32-byte fingerprint matters, or where
 you specifically want a lossy bit-signature rather than a near-recoverable embedding on the
-wire. `promptprint` ships the lexical `ppl1` (dependency-free) and the SimHash `pps1`
+wire. `promptlsh` ships the lexical `plm1` (dependency-free) and the SimHash `pls1`
 digests; a quantised-embedding scheme is a sensible future addition for the mid-size point
 on that curve, now that we've measured it's worth having.
 
@@ -150,7 +150,7 @@ task for this tool — §3 same-attack matching is the right one.)
 
 ## 5. Calibration: mean-centering
 
-Subtracting a shared reference mean before hashing (scheme `pps1c`) removes the dominant
+Subtracting a shared reference mean before hashing (scheme `pls1c`) removes the dominant
 "all-adversarial-text" direction. Raw-cosine separation, every model roughly doubles:
 
 | model | JBB raw → centered | HarmBench raw → centered |
@@ -162,7 +162,7 @@ Subtracting a shared reference mean before hashing (scheme `pps1c`) removes the 
 Robust and model-agnostic. Whitening, by contrast, destroys separation. Centering helps
 both same-attack recall (§3, +5–6 points on the digest) and *thresholded* detection
 (cleaner separation). It requires a *shared* mean, so centered digests use a distinct
-scheme (`pps1c`) and are never compared to uncentered ones. Because comparability depends
+scheme (`pls1c`) and are never compared to uncentered ones. Because comparability depends
 on **both** the embedding model and the exact reference mean, a centered digest is only
 meaningful alongside those identifiers — see the versioning note in the README.
 
@@ -184,13 +184,13 @@ meaningful alongside those identifiers — see the versioning note in the README
 
 ## Verdict
 
-- **Lexical digest (`ppl1`)** — proven for near-duplicate correlation: removes >half of a
+- **Lexical digest (`plm1`)** — proven for near-duplicate correlation: removes >half of a
   real corpus as exact duplicates, catches typos/rewording, order-sensitive. Cheap, offline,
   dependency-free.
 - **Cross-org correlation** — the digest finds ~4.4x what exact matching does on shared
   source material, exchanging only digests rather than raw prompt text (data
   minimisation, not a formal privacy guarantee — see the README).
-- **Semantic digest (`pps1`/`pps1c`)** — recovers the majority of heavily-reworded attacks
+- **Semantic digest (`pls1`/`pls1c`)** — recovers the majority of heavily-reworded attacks
   (0din centered ~0.71 recall@1 at N=400; clean general model ~0.61), beating the lexical
   baseline but trailing the full-embedding ceiling by 11–21 points — the cost of a 32-byte
   portable digest. A general model already gives a usable result, so **no fine-tuning is
@@ -198,13 +198,13 @@ meaningful alongside those identifiers — see the versioning note in the README
 - **Size/fidelity is a curve, not a cliff.** An int8-quantised embedding (~384 B) holds the
   ceiling; the 256-bit SimHash digest (32 B) trades 11–21 points for compactness. Choose by
   byte budget — a quantised-embedding scheme is worth adding for the middle of that curve.
-- **Centering (`pps1c`)** — a robust, cheap calibration that improves both recall and
+- **Centering (`pls1c`)** — a robust, cheap calibration that improves both recall and
   thresholded separation.
 
 ## Reproduce
 
 ```bash
-pip install -e . && pip install promptprint[fastembed]   # or [onnx] for the domain model
+pip install -e . && pip install promptlsh[fastembed]   # or [onnx] for the domain model
 python eval/cluster_corpus.py hackaprompt.parquet --column user_input
 python eval/family_recovery.py labelled.csv --text-col Goal --label-col Category --semantic
 python eval/semantic_eval.py

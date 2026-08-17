@@ -4,7 +4,7 @@ Runs the same evaluation harness with the lexical digest and with the fastembed-
 semantic digest, on both the lexical-variant families and the semantic-paraphrase
 families. Shows where each digest separates families and where it does not.
 
-    pip install promptprint[fastembed]
+    pip install promptlsh[fastembed]
     python eval/semantic_eval.py
 """
 
@@ -18,9 +18,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from fixtures import LEXICAL_FAMILIES, SEMANTIC_FAMILIES  # noqa: E402
 
-from promptprint.backends import fastembed_hasher  # noqa: E402
-from promptprint.embedding import semantic_similarity  # noqa: E402
-from promptprint.evaluate import summary  # noqa: E402
+from promptlsh.backends import fastembed_hasher  # noqa: E402
+from promptlsh.embedding import semantic_similarity  # noqa: E402
+from promptlsh.evaluate import summary  # noqa: E402
 
 
 def _report(name: str, data, hasher) -> None:

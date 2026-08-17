@@ -1,14 +1,14 @@
 """A lexical similarity digest for adversarial prompts.
 
-``promptprint`` computes a MinHash signature over shingles so that near-duplicate
+``promptlsh`` computes a MinHash signature over shingles so that near-duplicate
 prompts produce *comparable* digests: two prompts that share phrasing land close
 together, and a platform can cluster them without re-reading the raw text.
 
-This is the **lexical baseline** (``ppl1`` = promptprint lexical v1). It catches
+This is the **lexical baseline** (``plm1`` = promptlsh lexical v1). It catches
 rewording that preserves shared word sequences (the common case for
 copy-paste-and-tweak jailbreaks); it does **not** capture full semantic paraphrase
 where the wording changes but the meaning does not. That is the embedding-based
-direction (``pps1``, see ``embedding.py``). This module is deliberately
+direction (``pls1``, see ``embedding.py``). This module is deliberately
 dependency-free so the baseline is trivial to run and audit.
 
 Tokenisation is Unicode-aware (``\\w+`` with case folding), so non-Latin scripts
@@ -18,9 +18,9 @@ so distinct inputs always get distinct, non-empty shingle sets. An all-zero sign
 can therefore only come from genuinely empty input, and :func:`similarity` treats it
 as non-comparable (score 0.0) rather than letting empties collide at 1.0.
 
-Digest format (``ppl1``):
+Digest format (``plm1``):
 
-    ppl1:<num_perm>:<hex>:<hex>:...:<hex>
+    plm1:<num_perm>:<hex>:<hex>:...:<hex>
 
 where each ``<hex>`` is one 32-bit MinHash slot. Two digests of equal length are
 compared slot-by-slot; the fraction of matching slots estimates the Jaccard
@@ -37,7 +37,7 @@ _MAX_HASH = 1 << 32                # slots are reduced to 32 bits for compact se
 _DEFAULT_NUM_PERM = 128
 _DEFAULT_SHINGLE = 3
 _CHAR_SHINGLE = 3
-_SCHEME = "ppl1"
+_SCHEME = "plm1"
 
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
 
@@ -124,7 +124,7 @@ class LexicalHasher:
         return mins
 
     def digest(self, text: str) -> str:
-        """Return the serialised ``ppl1`` digest string for *text*."""
+        """Return the serialised ``plm1`` digest string for *text*."""
         sig = self.signature(text)
         return f"{_SCHEME}:{self.num_perm}:" + ":".join(format(v, "08x") for v in sig)
 
@@ -134,7 +134,7 @@ SemHasher = LexicalHasher
 
 
 def parse_digest(digest_str: str) -> list[int]:
-    """Parse a ``ppl1`` digest back into its list of slot values.
+    """Parse a ``plm1`` digest back into its list of slot values.
 
     Validates that the declared ``num_perm`` matches the actual number of slots, so a
     truncated or malformed digest fails loudly rather than comparing as a shorter one.
@@ -150,7 +150,7 @@ def parse_digest(digest_str: str) -> list[int]:
 
 
 def similarity(digest_a: str, digest_b: str) -> float:
-    """Estimate Jaccard similarity (0.0–1.0) from two ``ppl1`` digests.
+    """Estimate Jaccard similarity (0.0–1.0) from two ``plm1`` digests.
 
     An all-zero signature only arises from genuinely empty input; it is treated as
     non-comparable (0.0) so degenerate inputs never collide at 1.0.
@@ -167,7 +167,7 @@ _default = LexicalHasher()
 
 
 def digest(text: str) -> str:
-    """Compute the default ``ppl1`` digest for *text*."""
+    """Compute the default ``plm1`` digest for *text*."""
     return _default.digest(text)
 
 

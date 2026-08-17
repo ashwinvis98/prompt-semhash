@@ -23,11 +23,11 @@ def fastembed_hasher(
     seed: int = 1,
     mean: Sequence[float] | None = None,
 ) -> SemanticHasher:
-    """SemanticHasher backed by fastembed (ONNX). Install: ``promptprint[fastembed]``."""
+    """SemanticHasher backed by fastembed (ONNX). Install: ``promptlsh[fastembed]``."""
     try:
         from fastembed import TextEmbedding
     except ImportError as exc:  # pragma: no cover
-        raise ImportError("Install fastembed: pip install promptprint[fastembed]") from exc
+        raise ImportError("Install fastembed: pip install promptlsh[fastembed]") from exc
     model = TextEmbedding(model_name)
 
     def embed(text: str):

@@ -27,8 +27,8 @@ A digest is only useful if two installations, on any machine and any Python vers
 produce the **same** bytes for the same input. That is what lets independent parties
 correlate without a shared service.
 
-- Any change that alters the bytes a scheme produces (`ppl1`, `pps1`, `pps1c`) is a
-  **breaking** change. It must bump the scheme tag (`ppl2`, ...) — never change `ppl1`'s
+- Any change that alters the bytes a scheme produces (`plm1`, `pls1`, `pls1c`) is a
+  **breaking** change. It must bump the scheme tag (`ppl2`, ...) — never change `plm1`'s
   output in place — and update `CHANGELOG.md`.
 - `tests/test_digest.py::test_digest_is_pinned_across_versions` pins a known input to its
   exact digest string. If your change makes it fail, that is the guard working: either
@@ -39,6 +39,6 @@ correlate without a shared service.
 
 ## Scope
 
-`promptprint` is a similarity **digest**, not a detection engine or a clustering service.
+`promptlsh` is a similarity **digest**, not a detection engine or a clustering service.
 Retrieval/indexing strategy belongs in the consumer (see the connector in
 `adversarial-ai-cti`). Keep the lexical baseline dependency-free.
