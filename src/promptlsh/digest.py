@@ -36,10 +36,25 @@ _MERSENNE = (1 << 61) - 1          # large prime for the (a*h + b) mod p permuta
 _MAX_HASH = 1 << 32                # slots are reduced to 32 bits for compact serialization
 _DEFAULT_NUM_PERM = 128
 _DEFAULT_SHINGLE = 3
-_CHAR_SHINGLE = 3
+# Character n-grams (for unsegmented scripts + emoji/punctuation-only input) use bigrams:
+# CJK "words" are typically 1-2 characters, so bigrams are the standard granularity and
+# are far more robust to reordering than 3-grams (near-dup CJK: 0.4 vs 0.14).
+_CHAR_SHINGLE = 2
 _SCHEME = "plm1"
 
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
+
+# Scripts with no whitespace word boundaries (CJK ideographs, Japanese kana, Thai).
+# ``\w+`` swallows a whole sentence in these into one or two tokens, so word-shingling
+# degenerates into an exact-match hash and near-duplicates score 0. Text containing these
+# is shingled at the **character** level instead, which restores near-duplicate sensitivity.
+_UNSEGMENTED_RE = re.compile(
+    "[\u3040-\u30ff"   # Hiragana + Katakana
+    "\u3400-\u4dbf"    # CJK Extension A
+    "\u4e00-\u9fff"    # CJK Unified Ideographs
+    "\uf900-\ufaff"    # CJK Compatibility Ideographs
+    "\u0e00-\u0e7f]"   # Thai
+)
 
 
 def normalize(text: str) -> list[str]:
@@ -51,25 +66,35 @@ def normalize(text: str) -> list[str]:
     return _WORD_RE.findall((text or "").casefold())
 
 
-def _shingles(text: str, k: int) -> set[str]:
-    """Return the shingle set for *text*.
-
-    Word k-shingles when there are enough word tokens; the whole token span when there
-    are a few; and character n-grams as a fallback when there are no word tokens at all
-    (so emoji-only / punctuation-only / unsegmented input still yields distinct,
-    non-empty shingles instead of an empty set).
-    """
-    tokens = normalize(text)
-    if len(tokens) >= k:
-        return {" ".join(tokens[i : i + k]) for i in range(len(tokens) - k + 1)}
-    if tokens:
-        return {" ".join(tokens)}
+def _char_shingles(text: str) -> set[str]:
+    """Character n-grams over the case-folded, whitespace-stripped text."""
     chars = "".join((text or "").casefold().split())
     if not chars:
         return set()
     if len(chars) < _CHAR_SHINGLE:
         return {chars}
     return {chars[i : i + _CHAR_SHINGLE] for i in range(len(chars) - _CHAR_SHINGLE + 1)}
+
+
+def _shingles(text: str, k: int) -> set[str]:
+    """Return the shingle set for *text*.
+
+    - Word k-shingles for whitespace-segmented scripts (Latin, Cyrillic, Arabic, ...).
+    - **Character** n-grams for unsegmented scripts (CJK, Japanese, Thai), where a whole
+      sentence is one ``\\w+`` token and word-shingling would collapse to an exact-match
+      hash — so near-duplicates would score 0. Character n-grams restore near-dup
+      sensitivity there.
+    - Character n-grams also cover input with no word tokens at all (emoji-only,
+      punctuation-only), so distinct inputs never share an empty shingle set.
+    """
+    if _UNSEGMENTED_RE.search(text or ""):
+        return _char_shingles(text)
+    tokens = normalize(text)
+    if len(tokens) >= k:
+        return {" ".join(tokens[i : i + k]) for i in range(len(tokens) - k + 1)}
+    if tokens:
+        return {" ".join(tokens)}
+    return _char_shingles(text)
 
 
 def _base_hash(shingle: str) -> int:

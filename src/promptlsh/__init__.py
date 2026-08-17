@@ -26,7 +26,7 @@ from .embedding import (
     semantic_similarity,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 
 def compare(digest_a: str, digest_b: str) -> float:

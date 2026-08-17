@@ -8,6 +8,21 @@ All notable changes to `promptlsh` are recorded here. The format follows
 > not be comparable to one produced by another. From 1.0.0, any incompatible change to a
 > digest's bytes will come with a new scheme tag (`plm2`, ...), never a silent change.
 
+## [0.3.1] - 2026-08-16
+
+### Fixed
+- **CJK / unsegmented-script near-duplicates.** 0.3.0's Unicode tokenizer fixed the
+  all-zero collapse, but `\w+` swallows a whole CJK / Japanese / Thai sentence into a
+  single token, so word-shingling degenerated to an exact-match hash and a *reworded* CJK
+  prompt scored 0.0. Text containing unsegmented scripts is now shingled at the character
+  level (bigrams), restoring near-duplicate sensitivity — a reworded Chinese prompt now
+  scores ~0.7, not 0.0. Latin/Cyrillic/Arabic and the pinned English digest are unchanged.
+
+### Changed
+- Docs: corrected the size/fidelity framing — the lexical `plm1` (~1.1 KB at 128 perms) is
+  dominated by an int8-quantised embedding on both size and recall, so its justification is
+  zero ML dependency, not size. Re-ran the cross-org demo on the 128-perm default (2.9x).
+
 ## [0.3.0] - 2026-08-16
 
 ### Changed

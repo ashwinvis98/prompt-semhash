@@ -46,14 +46,15 @@ depends on the feed (HackAPrompt is a competition, so its redundancy is on the h
 ## 2. Cross-org correlation, digests only (lexical)
 
 `eval/*` (see `_scratch`): random 40k HackAPrompt split into two "orgs" (A, B), each
-holding ~14.5k unique prompts. Sharing **only digests** (not raw prompts):
+holding ~15.9k unique prompts. Sharing **only digests** (not raw prompts); near-duplicate
+clustering by LSH (16 bands × 8 rows over the 128-perm digest):
 
 | method | Org-A prompts found in Org B |
 |---|---|
-| exact match (verbatim) | 12.6% |
-| digest (near-duplicate) | **55.0%** (4.4x) |
+| exact match (verbatim) | 12.2% |
+| digest (near-duplicate) | **35.1%** (2.9x) |
 
-The digest finds **42 percentage points** more cross-org overlap than exact matching —
+The digest finds **~23 percentage points** more cross-org overlap than exact matching —
 reworded variants exact matching misses — while exchanging only fingerprints. (Caveat:
 A/B are random splits of one high-redundancy corpus, so this shows the exact-vs-digest
 gap on shared source material, not a universal rate; a genuinely cross-corpus test is
@@ -92,16 +93,22 @@ Four columns, from weakest to strongest correlation signal:
 
 Reading the numbers honestly:
 
-- The shipping digest **beats the lexical baseline** at every pool size (e.g. 0din
-  centered 0.708 vs lexical 0.460 at N=400) — semantic correlation of heavily-reworded
+- The shipping semantic digest **beats the lexical baseline** at every pool size (e.g.
+  0din centered 0.708 vs lexical 0.537 at N=400) — semantic correlation of heavily-reworded
   attacks is real and the digest captures a large part of it.
 - Hashing to 256 bits **costs 11–21 points** versus the embedding ceiling. That is the
   price of a 32-byte digest instead of shipping and comparing full float vectors.
 - **An 8-bit quantised embedding keeps essentially the whole ceiling** (0.767 vs 0.767,
-  0.820 vs 0.820) at ~384 bytes/vector. So the honest tradeoff is a size/fidelity curve,
-  not "digest vs nothing": full embedding (≈1.5 KB, ceiling) → int8-quant (≈384 B,
-  ~ceiling) → SimHash `pls1`/`pls1c` (32 B, −11–21 pts). Pick by your byte budget and how
-  much you care about not shipping something near-invertible to an embedding.
+  0.820 vs 0.820) at ~384 bytes/vector. So the *semantic* options form a size/fidelity
+  curve: full embedding (≈1.5 KB, ceiling) → int8-quant (≈384 B, ~ceiling) → SimHash
+  `pls1`/`pls1c` (32 B, −11–21 pts). Pick by byte budget and how much you care about not
+  shipping something near-invertible to an embedding.
+- **The lexical `plm1` is not a point on that curve — int8-quant dominates it on both
+  axes.** At 128 perms a `plm1` digest is ~1.1 KB (larger than a 384-byte int8 embedding)
+  and scores 0.537 (below int8's 0.767). Its justification is neither size nor accuracy
+  but **zero ML dependency**: no embedding model to download, pin, or run; fully
+  deterministic and offline. Use it when you can't or won't run a model — otherwise the
+  embedding path wins.
 - The **domain-tuned model wins** at both ceiling and digest.
 - **Centering (`pls1c`) helps the digest** by ~5–6 points and is essentially free.
 
@@ -176,7 +183,7 @@ meaningful alongside those identifiers — see the versioning note in the README
 - **Lexical digest (`plm1`)** — proven for near-duplicate correlation: removes >half of a
   real corpus as exact duplicates, catches typos/rewording, order-sensitive. Cheap, offline,
   dependency-free.
-- **Cross-org correlation** — the digest finds ~4.4x what exact matching does on shared
+- **Cross-org correlation** — the digest finds ~2.9x what exact matching does on shared
   source material, exchanging only digests rather than raw prompt text (data
   minimisation, not a formal privacy guarantee — see the README).
 - **Semantic digest (`pls1`/`pls1c`)** — recovers the majority of heavily-reworded attacks
@@ -184,9 +191,11 @@ meaningful alongside those identifiers — see the versioning note in the README
   baseline but trailing the full-embedding ceiling by 11–21 points — the cost of a 32-byte
   portable digest. A general model already gives a usable result, so **no fine-tuning is
   required**; a domain-tuned model is a modest further gain.
-- **Size/fidelity is a curve, not a cliff.** An int8-quantised embedding (~384 B) holds the
-  ceiling; the 256-bit SimHash digest (32 B) trades 11–21 points for compactness. Choose by
-  byte budget — a quantised-embedding scheme is worth adding for the middle of that curve.
+- **The semantic options form a size/fidelity curve** — full embedding (ceiling) →
+  int8-quant (~384 B, ~ceiling) → SimHash `pls1` (32 B, −11–21 pts); a quantised-embedding
+  scheme is worth adding for the middle. The **lexical `plm1` sits off that curve** (larger
+  than an int8 embedding *and* lower recall), so it's for the zero-dependency, no-model
+  case only.
 - **Centering (`pls1c`)** — a robust, cheap calibration that improves both recall and
   thresholded separation.
 
