@@ -190,7 +190,7 @@ than lexical, with a domain-tuned model and centering helping most.
 - [x] Same-attack matching on WildJailbreak: semantic digest beats lexical; ceiling-vs-digest gap measured. See [RESULTS.md](RESULTS.md).
 - [x] Domain-tuned backend (`backends.onnx_hasher`) + mean-centering calibration (`pls1c`).
 - [x] Inline model/reference-mean identity in the semantic digest string, enforced on compare.
-- [ ] A STIX observable property carrying the digest, for cross-instance correlation.
+- [ ] Digest carried as a spec-defined property via a STIX 2.1 `extension-definition` (`extension_type: toplevel-property-extension`), rather than the custom `x_promptlsh_digest` property that ships today in adversarial-ai-cti.
 
 ## Relationship to `adversarial-ai-cti`
 
@@ -228,7 +228,7 @@ overlaps closely:
   SDK cannot, by construction, be the cross-vendor interchange format.
 - **Publicly measured.** [`RESULTS.md`](RESULTS.md) reports reproducible numbers on public
   corpora — including the gap between the digest and the raw-embedding ceiling, and that an
-  int8-quantised embedding beats the SimHash digest at ~10x the size. Public research, not a
+  int8-quantised embedding beats the SimHash digest at ~12x the size. Public research, not a
   product claim.
 - **A dependency-free lexical baseline** (`plm1`, MinHash) alongside the semantic digest,
   for when you cannot run an embedding model at all.
