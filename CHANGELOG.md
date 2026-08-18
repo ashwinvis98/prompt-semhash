@@ -16,7 +16,8 @@ All notable changes to `promptlsh` are recorded here. The format follows
   single token, so word-shingling degenerated to an exact-match hash and a *reworded* CJK
   prompt scored 0.0. Text containing unsegmented scripts is now shingled at the character
   level (bigrams), restoring near-duplicate sensitivity — a reworded Chinese prompt now
-  scores ~0.7, not 0.0. Latin/Cyrillic/Arabic and the pinned English digest are unchanged.
+  scores as a near-duplicate (roughly 0.4–0.7 depending on how heavily it is reworded),
+  not 0.0. Latin/Cyrillic/Arabic and the pinned English digest are unchanged.
 
 ### Changed
 - Docs: corrected the size/fidelity framing — the lexical `plm1` (~1.1 KB at 128 perms) is

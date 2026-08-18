@@ -38,7 +38,8 @@ _DEFAULT_NUM_PERM = 128
 _DEFAULT_SHINGLE = 3
 # Character n-grams (for unsegmented scripts + emoji/punctuation-only input) use bigrams:
 # CJK "words" are typically 1-2 characters, so bigrams are the standard granularity and
-# are far more robust to reordering than 3-grams (near-dup CJK: 0.4 vs 0.14).
+# retain materially more near-duplicate signal than 3-grams (on a reworded zh
+# prompt-injection pair: bigram ~0.43 vs trigram ~0.27; exact Jaccard 0.45 vs 0.30).
 _CHAR_SHINGLE = 2
 _SCHEME = "plm1"
 
